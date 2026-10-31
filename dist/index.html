@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eee9df">
+  <meta name="description" content="Step into Salsabeel Deremah’s little library of UX/UI design, ideas and experiences. An interactive bookshelf portfolio.">
+  <title>Salsabeel’s Little Library — Portfolio</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="content.js" defer></script>
+  <script src="icons.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#library">ข้ามไปชั้นหนังสือ</a>
+  <main>
+    <section class="intro" aria-labelledby="headline">
+      <div class="intro-copy"><h1 id="headline">A little shelf,<br>a lot of <em>stories.</em><span class="title-star" aria-hidden="true"><i data-icon="asterisk"></i></span></h1><p class="intro-note">ยินดีต้อนรับสู่ห้องสมุดเล็ก ๆ ของซัลสบีล<br>รวมเรื่องราว งานออกแบบ และสิ่งที่ได้เรียนรู้ไว้บนชั้นนี้</p></div>
+      <aside class="library-card" aria-label="โปรไฟล์และช่องทางติดต่อ">
+        <span class="card-kicker">MEET THE LIBRARIAN</span>
+        <div class="card-person"><img src="assets/profile.png.webp" alt="ซัลสบีล เดเระมะ" width="160" height="190"><div><b>Salsabeel<br>Deremah</b><span>UX/UI & Visual Designer</span><p>Thoughtful design.<br>Curious mind.</p></div></div>
+        <div class="card-rule"></div>
+        <div class="profile-contact" aria-labelledby="contact-label">
+          <h2 id="contact-label">LET’S CONNECT</h2>
+          <a href="mailto:salsasira@gmail.com" aria-label="อีเมล salsasira@gmail.com" title="ส่งอีเมล"><span class="contact-type"><i data-icon="mail"></i></span><span>salsasira@gmail.com</span><span aria-hidden="true"><i data-icon="arrow-up-right"></i></span></a>
+          <a href="tel:+66624208969" aria-label="โทร 062 420 8969" title="โทรศัพท์"><span class="contact-type"><i data-icon="phone"></i></span><span>062 420 8969</span><span aria-hidden="true"><i data-icon="arrow-up-right"></i></span></a>
+          <a href="https://www.linkedin.com/in/salsabeel-deremah-557874310" aria-label="LinkedIn ของ Salsabeel Deremah" title="ดู LinkedIn" target="_blank" rel="noopener"><span class="contact-type"><i data-icon="link"></i></span><span>LinkedIn · Salsabeel Deremah</span><span aria-hidden="true"><i data-icon="arrow-up-right"></i></span></a>
+        </div>
+      </aside>
+    </section>
+    <section id="library" class="library" aria-label="ชั้นหนังสือ Portfolio 2 ชั้น">
+      <div class="collection-heading"><span>THE COLLECTION</span><span class="hint"><span aria-hidden="true"><i data-icon="arrow-down-left"></i></span> เลือกสักเล่ม แล้วเปิดเรื่องราวข้างใน</span><div class="collection-tools"><span class="catalogue">8 BOOKS · 2 SHELVES</span></div></div>
+      <div class="cabinet">
+        <div class="shelf shelf-top">
+          <div class="compartment about-compartment"><div class="shelf-label"><span>01</span> ABOUT ME & SKILLS</div><div class="books" id="about-books"></div><div class="shelf-doodle" aria-hidden="true"><span>hello,<br>I'm Salsa.</span><i data-icon="arrow-down-left"></i></div></div>
+          <div class="compartment projects-compartment"><div class="shelf-label"><span>02</span> FEATURED PROJECTS <small>4 VOLUMES</small></div><div class="books" id="project-books"></div><div class="bookend" aria-hidden="true"></div></div>
+        </div>
+        <div class="shelf shelf-bottom">
+          <div class="compartment other-compartment"><div class="shelf-label"><span>03</span> OTHER PROJECTS</div><div class="books" id="other-books"></div><div class="stack" aria-hidden="true"><span>little ideas</span><span>big possibilities</span><div class="ceramic"><i data-icon="asterisk"></i></div></div></div>
+          <div class="compartment cert-compartment"><div class="shelf-label"><span>04</span> CERTIFICATES</div><div class="books" id="cert-books"></div><div class="seal" aria-hidden="true">ALWAYS<br><span><i data-icon="award"></i></span><br>LEARNING</div></div>
+          <div class="compartment activity-compartment"><div class="shelf-label"><span>05</span> ACTIVITIES</div><div class="books" id="activity-books"></div><div class="plant" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div></div>
+        </div>
+      </div>
+      <div class="below-shelf"><span><i></i> HANDPICKED & PERSONALLY MADE</span><button id="first-book">เริ่มอ่านจาก About Me <span><i data-icon="arrow-up-right"></i></span></button><span>EST. 2026</span></div>
+    </section>
+  </main>
+  <dialog id="reader" aria-labelledby="reader-title" aria-describedby="page-status">
+    <h2 id="reader-title" class="visually-hidden"></h2>
+    <span id="page-status" class="visually-hidden" aria-live="polite" aria-atomic="true"></span>
+    <button id="close-reader" aria-label="กลับชั้นหนังสือ"><span aria-hidden="true"><i data-icon="library-big"></i></span> กลับชั้นหนังสือ</button>
+    <div class="book-stage"><div id="open-book" class="open-book">
+      <article id="left-page" class="paper left-page"></article>
+      <article id="right-page" class="paper right-page"></article>
+      <div class="turner" aria-hidden="true"><div class="turn-front paper"></div><div class="turn-back paper"></div></div>
+      <div class="book-binding" aria-hidden="true"></div>
+    </div></div>
+  </dialog>
+  <dialog id="image-viewer" aria-label="ดูภาพขยาย"><button id="close-image" aria-label="ปิดภาพขยาย" title="ปิดภาพ"><i data-icon="x"></i></button><img alt=""><p></p></dialog>
+</body>
+</html>
