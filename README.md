@@ -12,32 +12,26 @@ python3 -m http.server 4173 --directory dist
 
 จากนั้นเปิด http://localhost:4173
 
-## อัปโหลดเป็น repository ใหม่
+## Repository และสถานะเว็บ
 
-สร้าง repository ว่างชื่อ `salsabeel-library` ในบัญชี `thatshouldbeme` โดยไม่เพิ่ม README, .gitignore หรือ license จาก GitHub เพราะโฟลเดอร์นี้เตรียมไฟล์และ commit ไว้แล้ว
+โค้ดถูกอัปโหลดแล้วที่ https://github.com/thatshouldbeme/salsabeel-library เป็น **Private** แยกจากพอร์ตเดิม
 
-โฟลเดอร์นี้ตั้ง remote ของ repository ใหม่ไว้แล้ว:
+โฟลเดอร์ในเครื่องเชื่อมกับสาขา `main` ของ repository นี้แล้ว หลังแก้ไขไฟล์ให้อัปเดตด้วย:
 
 ```sh
 cd "/Users/salsabeelderemah/Desktop/salsabeel-library"
-git push -u origin main
-```
-
-## เปิดเว็บไซต์ GitHub Pages
-
-ใน repository ใหม่ ไปที่ Settings → Pages → Build and deployment → Source เลือก GitHub Actions แล้วเปิด Actions → Publish Salsabeel Library → Run workflow
-
-เมื่อเผยแพร่สำเร็จ URL ที่คาดไว้คือ https://thatshouldbeme.github.io/salsabeel-library/ — URL นี้ยังไม่ใช่หลักฐานว่ามีการเผยแพร่แล้ว
-
-หลังจากนั้นเมื่อแก้ไขไฟล์:
-
-```sh
 git add .
 git commit -m "Update portfolio"
 git push
 ```
 
-Workflow จะเผยแพร่เฉพาะเนื้อหาใน `dist` พอร์ตเดิมและเว็บไซต์ Sites เดิมไม่ได้เชื่อมกับ Git ของโฟลเดอร์นี้
+## GitHub Pages
+
+ตรวจเมื่อ 31 ตุลาคม 2026: หน้าตั้งค่า GitHub แจ้งว่าต้องอัปเกรดแพ็กเกจหรือเปลี่ยน repository เป็น Public จึงจะเปิด Pages ได้ ขณะนี้คง repository เป็น Private ตามที่เจ้าของเลือก จึงยังไม่มีเว็บที่เผยแพร่จาก GitHub Pages
+
+เก็บ workflow ไว้สำหรับสั่งเผยแพร่เอง (`workflow_dispatch`) โดยไม่รันอัตโนมัติทุกครั้งที่ push เพื่อไม่ให้เกิดงานเผยแพร่ที่ล้มเหลวซ้ำ เมื่อบัญชีรองรับแล้ว ไปที่ Settings → Pages เลือก GitHub Actions และสั่ง Actions → Publish Salsabeel Library → Run workflow
+
+เว็บต้นแบบเดิมยังอยู่ที่ https://little-library-portfolio-1031.satiny-knoll-9335.chatgpt.site/ การ push ไป GitHub จะไม่เปลี่ยนเว็บ Sites เดิมโดยอัตโนมัติ
 
 ## ไฟล์หลัก
 
