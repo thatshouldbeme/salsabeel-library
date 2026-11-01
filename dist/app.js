@@ -173,6 +173,10 @@
     $('#right-page').setAttribute('aria-label', t(mobileQuery.matches?'mobile':'right'));
     updateNavigation();
   }
+  function updateCover() {
+    transition.querySelector('.cover-art').innerHTML=`<span class="cover-series">${t('series')}</span><span class="cover-volume">${t('volume')} ${String(window.LIBRARY.indexOf(active)+1).padStart(2,'0')}</span><h3>${escapeHTML(active.title)}</h3><span class="cover-emblem">${bookIcon(active)}</span><span class="cover-category">${escapeHTML(active.category)}</span><span class="cover-author">${t('author')}</span>`;
+    transition.querySelector('.volume-spine').innerHTML=`<span>${escapeHTML(active.title)}</span><b>${bookIcon(active)}</b>`;
+  }
   async function openBook(id, trigger) {
     if (opening || closing || reader.open) return;
     active = window.LIBRARY.find(b=>b.id===id);
@@ -204,8 +208,7 @@
     transition.style.setProperty('--volume-height',`${height}px`);
     transition.style.setProperty('--volume-depth',`${depth}px`);
     transition.style.setProperty('--volume-color',active.color);
-    transition.querySelector('.cover-art').innerHTML=`<span class="cover-series">${t('series')}</span><span class="cover-volume">${t('volume')} ${String(window.LIBRARY.indexOf(active)+1).padStart(2,'0')}</span><h3>${escapeHTML(active.title)}</h3><span class="cover-emblem">${bookIcon(active)}</span><span class="cover-category">${escapeHTML(active.category)}</span><span class="cover-author">${t('author')}</span>`;
-    transition.querySelector('.volume-spine').innerHTML=`<span>${escapeHTML(active.title)}</span><b>${bookIcon(active)}</b>`;
+    updateCover();
     state.source.classList.add('book-picked');
     transition.classList.remove('flight-dimmed','flight-opening');
     transition.showModal();
@@ -306,6 +309,7 @@
     transition.style.setProperty('--volume-height',`${height}px`);
     transition.style.setProperty('--volume-depth',`${depth}px`);
     transition.style.setProperty('--volume-color',active.color);
+    updateCover();
     const state={source,animations:[]};closing=state;
     state.spread=snapshotSpread();
     transition.querySelector('.flight-world').prepend(state.spread);
