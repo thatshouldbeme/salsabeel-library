@@ -39,6 +39,8 @@ git push
 - `dist/style.css` — รูปแบบและการแสดงผลบนมือถือ
 - `dist/app.js` — หยิบหนังสือ กางปก พลิกหน้าและภาพขยาย
 - `dist/content.js` — หนังสือ 8 เล่มและเนื้อหา
+- `dist/i18n.js` — ตัวสลับไทย–อังกฤษและข้อความส่วนติดต่อ จำภาษาที่เลือกในเครื่อง
+- `dist/translations.js` — คำแปลหัวข้อและเนื้อหาหนังสือ โดยคงชื่อโปรเจกต์และศัพท์เทคนิค
 - `dist/icons.js` — SVG จาก Lucide แบบเส้นบาง 1.25 px
 - `dist/assets/` — ภาพ เอกสาร และใบอนุญาตไอคอน Lucide
 - `.github/workflows/pages.yml` — เผยแพร่ GitHub Pages จากโฟลเดอร์ dist

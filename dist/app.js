@@ -2,6 +2,7 @@
   'use strict';
   const $ = s => document.querySelector(s);
   const icon = window.libraryIcon;
+  const t = key => window.libraryI18n.t(key);
   const bookIcons={about:'user-round',suth:'heart-pulse',goal:'flame',dorm:'house',kiosk:'map-pin',other:'palette',certificates:'award',activities:'users-round'};
   const bookIcon = book => icon(bookIcons[book.id]);
   document.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=icon(el.dataset.icon);});
@@ -12,11 +13,12 @@
   try { motionEnabled=localStorage.getItem('library-motion')!=='reduced'; } catch {}
   const motionButton=document.createElement('button');
   motionButton.className='motion-toggle';
-  motionButton.setAttribute('aria-label','เปิดหรือปิดการเคลื่อนไหวสามมิติ');
+  motionButton.setAttribute('aria-label',t('motion'));
   document.querySelector('.collection-tools').append(motionButton);
   function updateMotion() {
     motionButton.innerHTML=icon(motionEnabled?'box':'pause');
-    motionButton.title=motionEnabled?'3D Motion เปิดอยู่ — คลิกเพื่อปิด':'3D Motion ปิดอยู่ — คลิกเพื่อเปิด';
+    motionButton.title=t(motionEnabled?'motionOn':'motionOff');
+    motionButton.setAttribute('aria-label',t('motion'));
     motionButton.setAttribute('aria-pressed',String(motionEnabled));
     document.body.classList.toggle('motion-reduced',!motionEnabled);
   }
@@ -30,9 +32,33 @@
   let opening = null;
   const transition = document.createElement('dialog');
   transition.id = 'book-transition';
-  transition.setAttribute('aria-label','กำลังหยิบหนังสือออกจากชั้น');
-  transition.innerHTML = `<button class="cancel-opening" aria-label="ยกเลิกการเปิดหนังสือ">กลับไปที่ชั้น ${icon('x')}</button><div class="flight-matte" aria-hidden="true"></div><div class="flight-world" aria-hidden="true"><div class="flight-path"><div class="volume"><div class="volume-back"></div><div class="volume-pages"></div><div class="volume-top"></div><div class="volume-bottom"></div><div class="volume-spine"></div><div class="volume-pageface"></div><div class="volume-front"><div class="cover-art"></div><div class="cover-lining"></div></div></div></div><div class="flight-shadow"></div></div><p class="flight-caption" aria-live="polite"></p>`;
+  transition.setAttribute('aria-label',t('opening'));
+  transition.innerHTML = `<button class="cancel-opening" aria-label="${t('cancel')}">${t('back')} ${icon('x')}</button><div class="flight-matte" aria-hidden="true"></div><div class="flight-world" aria-hidden="true"><div class="flight-path"><div class="volume"><div class="volume-back"></div><div class="volume-pages"></div><div class="volume-top"></div><div class="volume-bottom"></div><div class="volume-spine"></div><div class="volume-pageface"></div><div class="volume-front"><div class="cover-art"></div><div class="cover-lining"></div></div></div></div><div class="flight-shadow"></div></div><p class="flight-caption" aria-live="polite"></p>`;
   document.body.append(transition);
+  const fairyDust=document.createElement('div');
+  fairyDust.className='fairy-dust';
+  fairyDust.setAttribute('aria-hidden','true');
+  transition.append(fairyDust);
+  let fairyTimer;
+  function clearFairyDust() {
+    clearTimeout(fairyTimer);
+    fairyDust.replaceChildren();
+  }
+  function scatterFairyDust(origin) {
+    clearFairyDust();
+    if (!motionEnabled) return;
+    const fragment=document.createDocumentFragment();
+    for(let i=0;i<28;i++) {
+      const mote=document.createElement('span');
+      const angle=(i/28)*Math.PI*2+(Math.random()-.5)*.3;
+      const distance=55+Math.random()*55;
+      mote.className=i%4===0?'fairy-mote fairy-glint':'fairy-mote';
+      mote.style.cssText=`left:${origin.left+origin.width/2+Math.cos(angle)*(origin.width*.55+8)}px;top:${origin.top+origin.height*.5+Math.sin(angle)*origin.height*.45}px;--dust-x:${Math.cos(angle)*distance}px;--dust-y:${Math.sin(angle)*distance-25}px;--dust-size:${i%4===0?11+Math.random()*4:3+Math.random()*2}px;--dust-time:${1300+Math.random()*400}ms;--dust-delay:${Math.random()*70}ms`;
+      fragment.append(mote);
+    }
+    fairyDust.append(fragment);
+    fairyTimer=setTimeout(clearFairyDust,1900);
+  }
   const flightPath = transition.querySelector('.flight-path');
   const volume = transition.querySelector('.volume');
   const frontCover = transition.querySelector('.volume-front');
@@ -45,6 +71,7 @@
     state.animations.forEach(animation=>animation.cancel());
     state.spread?.remove();
     state.source?.classList.remove('book-picked');
+    clearFairyDust();
     transition.close();
     reader.classList.remove('reader-waiting','reader-arriving');
     reader.close();
@@ -62,24 +89,44 @@
     const button = document.createElement('button');
     button.className = 'book';
     button.style.cssText = `--color:${book.color};--height:${book.height}px;--width:${book.width}px;--lean:${book.id==='goal'?'-3':book.id==='activities'?'3':'0'}deg;${book.id==='goal'||book.id==='certificates'?'--type:#55482c':''}`;
-    button.setAttribute('aria-label',`เปิดหนังสือ ${book.title}`);
+    button.setAttribute('aria-label',`${t('open')} ${book.title}`);
     button.dataset.book = book.id;
-    button.innerHTML = `<span class="spine-num">VOL. ${String(i+1).padStart(2,'0')}</span><span class="spine-line"></span><span class="spine-title">${escapeHTML(book.title)}</span><span class="spine-symbol" aria-hidden="true">${bookIcon(book)}</span>`;
+    button.innerHTML = `<span class="spine-num">${t('spineVolume')} ${String(i+1).padStart(2,'0')}</span><span class="spine-line"></span><span class="spine-title">${escapeHTML(book.title)}</span><span class="spine-symbol" aria-hidden="true">${bookIcon(book)}</span>`;
     button.addEventListener('click',() => openBook(book.id, button));
     $(locations[book.id]).append(button);
   });
+  document.addEventListener('library-language-change',()=>{
+    updateMotion();
+    transition.setAttribute('aria-label',t('opening'));
+    const cancelButton=transition.querySelector('.cancel-opening');
+    cancelButton.innerHTML=`${t('back')} ${icon('x')}`;
+    cancelButton.setAttribute('aria-label',t('cancel'));
+    window.LIBRARY.forEach(book=>{
+      const button=document.querySelector(`[data-book="${book.id}"]`);
+      button.querySelector('.spine-title').textContent=book.title;
+      button.setAttribute('aria-label',`${t('open')} ${book.title}`);
+      button.querySelector('.spine-num').textContent=`${t('spineVolume')} ${String(window.LIBRARY.indexOf(book)+1).padStart(2,'0')}`;
+    });
+    if(active){
+      clearTimeout(flipTimer);busy=false;
+      bookEl.classList.remove('flipping','backwards');
+      active=window.LIBRARY.find(book=>book.id===active.id);
+      $('#reader-title').textContent=active.title;
+      render();
+    }
+  });
   function pageHTML(index) {
     const page = active.pages[index];
-    if (!page) return `<div class="end-star" aria-hidden="true">${icon('book-open')}</div><h3 class="page-title">The end.</h3><p class="page-body">กลับไปเลือกเล่มต่อไปบนชั้นหนังสือ</p><button class="page-link" data-return>กลับไปที่ชั้นหนังสือ ${icon('arrow-up-right')}</button>`;
+    if (!page) return `<div class="end-star" aria-hidden="true">${icon('book-open')}</div><h3 class="page-title">${t('end')}</h3><p class="page-body">${t('endNote')}</p><button class="page-link" data-return>${t('return')} ${icon('arrow-up-right')}</button>`;
     let html = `<p class="page-kicker">${escapeHTML(page.kicker || active.category)} / ${String(index+1).padStart(2,'0')}</p>`;
     if (page.kind==='end') html += `<div class="end-star" aria-hidden="true">${icon('book-open')}</div>`;
     html += `<h3 class="page-title">${escapeHTML(page.title)}</h3>`;
-    if (page.image) html += `<img class="page-image ${escapeHTML(page.kind||'')}" src="${url(page.image)}" alt="${escapeHTML(page.title)}" data-zoom tabindex="0" role="button" aria-label="ขยายภาพ ${escapeHTML(page.title)}" loading="eager">`;
-    if (page.paragraphs) html += `<div class="page-body">${page.paragraphs.map(p=>`<p>${escapeHTML(p)}</p>`).join('')}</div>`;
+    if (page.image) html += `<img class="page-image ${escapeHTML(page.kind||'')}" src="${url(page.image)}" alt="${escapeHTML(page.title)}" data-zoom tabindex="0" role="button" aria-label="${t('zoom')} ${escapeHTML(page.title)}" loading="eager">`;
+    if (page.paragraphs) html += `<div class="page-body">${page.paragraphs.filter(p=>!/^projects\//.test(p)).map(p=>`<p>${escapeHTML(p)}</p>`).join('')}</div>`;
     if (page.tags) html += `<div class="page-tags">${page.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>`;
     if (page.caption) html += `<p class="page-caption">${escapeHTML(page.caption)}</p>`;
     if (page.links) html += page.links.map(l=>`<a class="page-link" href="${url(l.url)}" target="_blank" rel="noopener">${escapeHTML(l.label)}</a> `).join('');
-    if (page.return) html += `<button class="page-link" data-return>กลับไปที่ชั้นหนังสือ ${icon('arrow-up-right')}</button>`;
+    if (page.return) html += `<button class="page-link" data-return>${t('return')} ${icon('arrow-up-right')}</button>`;
     return html+`<span class="page-num">${String(index+1).padStart(2,'0')} <span aria-hidden="true">—</span> ${escapeHTML(active.title)}</span>`;
   }
   function setPage(el, index) {
@@ -93,9 +140,9 @@
     setPage($('#right-page'), mobileQuery.matches ? offset : offset+1);
     $('#left-page').scrollTop = $('#right-page').scrollTop = 0;
     const last = Math.min(offset+step(),active.pages.length);
-    $('#page-status').textContent = mobileQuery.matches ? `หน้า ${offset+1} / ${active.pages.length}` : `หน้า ${offset+1}–${last} / ${active.pages.length}`;
-    $('#left-page').setAttribute('aria-label','หน้าซ้าย — คลิกเพื่อย้อนกลับ');
-    $('#right-page').setAttribute('aria-label', mobileQuery.matches?'หน้าหนังสือ — แตะด้านขวาเพื่อไปต่อ ด้านซ้ายเพื่อย้อนกลับ':'หน้าขวา — คลิกเพื่อไปหน้าถัดไป');
+    $('#page-status').textContent = mobileQuery.matches ? `${t('page')} ${offset+1} / ${active.pages.length}` : `${t('page')} ${offset+1}–${last} / ${active.pages.length}`;
+    $('#left-page').setAttribute('aria-label',t('left'));
+    $('#right-page').setAttribute('aria-label', t(mobileQuery.matches?'mobile':'right'));
   }
   async function openBook(id, trigger) {
     if (opening || reader.open) return;
@@ -128,12 +175,13 @@
     transition.style.setProperty('--volume-height',`${height}px`);
     transition.style.setProperty('--volume-depth',`${depth}px`);
     transition.style.setProperty('--volume-color',active.color);
-    transition.querySelector('.cover-art').innerHTML=`<span class="cover-series">SALSABEEL’S LITTLE LIBRARY</span><span class="cover-volume">VOLUME ${String(window.LIBRARY.indexOf(active)+1).padStart(2,'0')}</span><h3>${escapeHTML(active.title)}</h3><span class="cover-emblem">${bookIcon(active)}</span><span class="cover-category">${escapeHTML(active.category)}</span><span class="cover-author">SALSABEEL DEREMAH</span>`;
+    transition.querySelector('.cover-art').innerHTML=`<span class="cover-series">${t('series')}</span><span class="cover-volume">${t('volume')} ${String(window.LIBRARY.indexOf(active)+1).padStart(2,'0')}</span><h3>${escapeHTML(active.title)}</h3><span class="cover-emblem">${bookIcon(active)}</span><span class="cover-category">${escapeHTML(active.category)}</span><span class="cover-author">${t('author')}</span>`;
     transition.querySelector('.volume-spine').innerHTML=`<span>${escapeHTML(active.title)}</span><b>${bookIcon(active)}</b>`;
     state.source.classList.add('book-picked');
     transition.classList.remove('flight-dimmed','flight-opening');
     transition.showModal();
-    caption.textContent='หยิบเรื่องราวออกจากชั้น…';
+    scatterFairyDust(origin);
+    caption.textContent=t('picking');
     const position=(px,py,scale,z=0)=>`translate3d(${px}px,${py}px,${z}px) scale(${scale})`;
     try {
       // Pull the spine towards the visitor before rotating to reveal the cover.
@@ -151,7 +199,7 @@
       ]);
       // A short, visible pause lets the reader see the full cover and page edges.
       await animateOpening(volume,[{transform:'rotateX(-6deg) rotateY(-18deg) rotateZ(-3deg)'},{transform:'rotateX(-3deg) rotateY(-10deg) rotateZ(0deg)'}],650,state,'ease-in-out');
-      caption.textContent='เปิดเรื่องราวบทนี้';
+      caption.textContent=t('chapter');
       await Promise.all([
         animateOpening(flightPath,[{transform:position(centerX,centerY,showcaseScale)},{transform:position(tx,ty,1)}],500,state),
         animateOpening(volume,[{transform:'rotateX(-3deg) rotateY(-10deg) rotateZ(0deg)'},{transform:'rotateX(0deg) rotateY(0deg) rotateZ(0deg)'}],500,state)
@@ -187,6 +235,7 @@
     if(opening!==state)return;
     opening=null;
     reader.classList.remove('reader-waiting');
+    clearFairyDust();
     transition.close();
     state.animations.forEach(animation=>animation.cancel());
     state.spread?.remove();
