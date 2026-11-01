@@ -6,7 +6,10 @@
   <meta name="theme-color" content="#eee9df">
   <meta name="description" content="Step into Salsabeel Deremah’s little library of UX/UI design, ideas and experiences. An interactive bookshelf portfolio.">
   <title>Salsabeel’s Little Library — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="refinements.css">
   <script src="content.js" defer></script>
   <script src="icons.js" defer></script>
   <script src="translations.js" defer></script>
@@ -17,7 +20,7 @@
   <a class="skip" href="#library">ข้ามไปชั้นหนังสือ</a>
   <main>
     <section class="intro" aria-labelledby="headline">
-      <div class="intro-copy"><h1 id="headline">A little shelf,<br>a lot of <em>stories.</em><span class="title-star" aria-hidden="true"><i data-icon="asterisk"></i></span></h1><p class="intro-note">ยินดีต้อนรับสู่ห้องสมุดเล็ก ๆ ของซัลสบีล<br>รวมเรื่องราว งานออกแบบ และสิ่งที่ได้เรียนรู้ไว้บนชั้นนี้</p></div>
+      <div class="intro-copy"><h1 id="headline">A little shelf,<br>a lot of <em>stories.</em><span class="title-star" aria-hidden="true"><i data-icon="asterisk"></i></span></h1><p class="intro-note">ยินดีต้อนรับสู่ห้องสมุดเล็ก ๆ ของซัลสบีล<br>รวมเรื่องราว งานออกแบบ และสิ่งที่ได้เรียนรู้ไว้บนชั้นนี้</p><a id="explore-projects" class="explore-projects" href="#featured-projects">Explore Projects <i data-icon="arrow-down-left"></i></a></div>
       <aside class="library-card" aria-label="โปรไฟล์และช่องทางติดต่อ">
         <span class="card-kicker">MEET THE LIBRARIAN</span>
         <div class="card-person"><img src="assets/profile.png.webp" alt="ซัลสบีล เดเระมะ" width="160" height="190"><div><b>Salsabeel<br>Deremah</b><span>UX/UI & Visual Designer</span><p>Thoughtful design.<br>Curious mind.</p></div></div>
@@ -35,7 +38,7 @@
       <div class="cabinet">
         <div class="shelf shelf-top">
           <div class="compartment about-compartment"><div class="shelf-label"><span>01</span> ABOUT ME & SKILLS</div><div class="books" id="about-books"></div><div class="shelf-doodle" aria-hidden="true"><span>hello,<br>I'm Salsa.</span><i data-icon="arrow-down-left"></i></div></div>
-          <div class="compartment projects-compartment"><div class="shelf-label"><span>02</span> FEATURED PROJECTS <small>4 VOLUMES</small></div><div class="books" id="project-books"></div><div class="bookend" aria-hidden="true"></div></div>
+          <div id="featured-projects" class="compartment projects-compartment" tabindex="-1" aria-labelledby="featured-label"><div id="featured-label" class="shelf-label"><span>02</span> FEATURED PROJECTS <small>4 VOLUMES</small></div><span id="project-scroll-hint" class="shelf-scroll-hint" hidden>Swipe for all 4 projects ↔</span><div class="books" id="project-books"></div><div class="bookend" aria-hidden="true"></div></div>
         </div>
         <div class="shelf shelf-bottom">
           <div class="compartment other-compartment"><div class="shelf-label"><span>03</span> OTHER PROJECTS</div><div class="books" id="other-books"></div><div class="stack" aria-hidden="true"><span>little ideas</span><span>big possibilities</span><div class="ceramic"><i data-icon="asterisk"></i></div></div></div>
@@ -47,15 +50,24 @@
     </section>
   </main>
   <dialog id="reader" aria-labelledby="reader-title" aria-describedby="page-status">
-    <h2 id="reader-title" class="visually-hidden"></h2>
-    <span id="page-status" class="visually-hidden" aria-live="polite" aria-atomic="true"></span>
+    <header class="reader-toolbar">
+    <h2 id="reader-title"></h2>
     <button id="close-reader" aria-label="กลับชั้นหนังสือ"><span aria-hidden="true"><i data-icon="library-big"></i></span> กลับชั้นหนังสือ</button>
+    </header>
     <div class="book-stage"><div id="open-book" class="open-book">
       <article id="left-page" class="paper left-page"></article>
       <article id="right-page" class="paper right-page"></article>
       <div class="turner" aria-hidden="true"><div class="turn-front paper"></div><div class="turn-back paper"></div></div>
       <div class="book-binding" aria-hidden="true"></div>
     </div></div>
+    <footer class="reading-navigation" aria-label="Book navigation">
+      <div class="reading-actions">
+        <button id="previous-page" type="button"><i data-icon="arrow-left"></i><span>Previous</span></button>
+        <div class="reading-position"><span id="page-status" aria-live="polite" aria-atomic="true"></span><progress id="reading-progress" aria-hidden="true" max="1" value="0"></progress></div>
+        <button id="next-page" type="button"><span>Next</span><i data-icon="arrow-left"></i></button>
+      </div>
+      <p id="reading-hint"></p>
+    </footer>
   </dialog>
   <dialog id="image-viewer" aria-label="ดูภาพขยาย"><button id="close-image" aria-label="ปิดภาพขยาย" title="ปิดภาพ"><i data-icon="x"></i></button><img alt=""><p></p></dialog>
 </body>

@@ -7,8 +7,9 @@
   const bookIcon = book => icon(bookIcons[book.id]);
   document.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=icon(el.dataset.icon);});
   const reader = $('#reader'), imageViewer = $('#image-viewer'), bookEl = $('#open-book');
-  const mobileQuery = matchMedia('(max-width:650px)');
-  // This prototype explicitly demonstrates motion; the visitor can opt out locally.
+  const mobileQuery = matchMedia('(max-width:760px)');
+  const reducedMotionQuery=matchMedia('(prefers-reduced-motion: reduce)');
+  const canAnimate=()=>motionEnabled && !reducedMotionQuery.matches && typeof bookEl.animate==='function';
   let motionEnabled=true;
   try { motionEnabled=localStorage.getItem('library-motion')!=='reduced'; } catch {}
   const motionButton=document.createElement('button');
@@ -16,11 +17,13 @@
   motionButton.setAttribute('aria-label',t('motion'));
   document.querySelector('.collection-tools').append(motionButton);
   function updateMotion() {
-    motionButton.innerHTML=icon(motionEnabled?'box':'pause');
-    motionButton.title=t(motionEnabled?'motionOn':'motionOff');
+    const enabled=canAnimate();
+    motionButton.innerHTML=icon(enabled?'box':'pause');
+    motionButton.title=t(reducedMotionQuery.matches?'motionSystem':enabled?'motionOn':'motionOff');
+    motionButton.disabled=reducedMotionQuery.matches;
     motionButton.setAttribute('aria-label',t('motion'));
-    motionButton.setAttribute('aria-pressed',String(motionEnabled));
-    document.body.classList.toggle('motion-reduced',!motionEnabled);
+    motionButton.setAttribute('aria-pressed',String(enabled));
+    document.body.classList.toggle('motion-reduced',!enabled);
   }
   motionButton.addEventListener('click',()=>{
     motionEnabled=!motionEnabled;
@@ -29,7 +32,8 @@
   });
   updateMotion();
   let active = null, offset = 0, busy = false, returnFocus = null, flipTimer;
-  let opening = null;
+  let opening = null, closing = null;
+  const flipDuration=500;
   const transition = document.createElement('dialog');
   transition.id = 'book-transition';
   transition.setAttribute('aria-label',t('opening'));
@@ -46,7 +50,7 @@
   }
   function scatterFairyDust(origin) {
     clearFairyDust();
-    if (!motionEnabled) return;
+    if (!canAnimate()) return;
     const fragment=document.createDocumentFragment();
     for(let i=0;i<28;i++) {
       const mote=document.createElement('span');
@@ -66,6 +70,7 @@
   transition.querySelector('button').addEventListener('click',cancelOpening);
   transition.addEventListener('cancel',event=>{event.preventDefault();cancelOpening();});
   function cancelOpening() {
+    if(closing){finishClose(closing);return;}
     if (!opening) return;
     const state=opening;opening=null;
     state.animations.forEach(animation=>animation.cancel());
@@ -91,12 +96,13 @@
     button.style.cssText = `--color:${book.color};--height:${book.height}px;--width:${book.width}px;--lean:${book.id==='goal'?'-3':book.id==='activities'?'3':'0'}deg;${book.id==='goal'||book.id==='certificates'?'--type:#55482c':''}`;
     button.setAttribute('aria-label',`${t('open')} ${book.title}`);
     button.dataset.book = book.id;
-    button.innerHTML = `<span class="spine-num">${t('spineVolume')} ${String(i+1).padStart(2,'0')}</span><span class="spine-line"></span><span class="spine-title">${escapeHTML(book.title)}</span><span class="spine-symbol" aria-hidden="true">${bookIcon(book)}</span>`;
+    button.innerHTML = `<span class="spine-depth" aria-hidden="true"></span><span class="spine-num">${t('spineVolume')} ${String(i+1).padStart(2,'0')}</span><span class="spine-line"></span><span class="spine-title">${escapeHTML(book.title)}</span><span class="spine-symbol" aria-hidden="true">${bookIcon(book)}</span>`;
     button.addEventListener('click',() => openBook(book.id, button));
     $(locations[book.id]).append(button);
   });
   document.addEventListener('library-language-change',()=>{
     updateMotion();
+    updateShelfHint();
     transition.setAttribute('aria-label',t('opening'));
     const cancelButton=transition.querySelector('.cancel-opening');
     cancelButton.innerHTML=`${t('back')} ${icon('x')}`;
@@ -121,7 +127,7 @@
     let html = `<p class="page-kicker">${escapeHTML(page.kicker || active.category)} / ${String(index+1).padStart(2,'0')}</p>`;
     if (page.kind==='end') html += `<div class="end-star" aria-hidden="true">${icon('book-open')}</div>`;
     html += `<h3 class="page-title">${escapeHTML(page.title)}</h3>`;
-    if (page.image) html += `<img class="page-image ${escapeHTML(page.kind||'')}" src="${url(page.image)}" alt="${escapeHTML(page.title)}" data-zoom tabindex="0" role="button" aria-label="${t('zoom')} ${escapeHTML(page.title)}" loading="eager">`;
+    if (page.image) html += `<img class="page-image ${escapeHTML(page.kind||'')}" src="${url(page.image)}" alt="${escapeHTML(page.title)}" data-zoom tabindex="0" role="button" aria-label="${t('zoom')} ${escapeHTML(page.title)}" loading="eager" decoding="async">`;
     if (page.paragraphs) html += `<div class="page-body">${page.paragraphs.filter(p=>!/^projects\//.test(p)).map(p=>`<p>${escapeHTML(p)}</p>`).join('')}</div>`;
     if (page.tags) html += `<div class="page-tags">${page.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>`;
     if (page.caption) html += `<p class="page-caption">${escapeHTML(page.caption)}</p>`;
@@ -131,21 +137,44 @@
   }
   function setPage(el, index) {
     el.innerHTML = pageHTML(index);
+    const content=document.createElement('div');
+    content.className='page-content';
+    content.tabIndex=0;
+    content.setAttribute('role','region');
+    content.setAttribute('aria-label',active.pages[index]?.title||t('end'));
+    [...el.childNodes].filter(node=>!node.classList?.contains('page-num')).forEach(node=>content.append(node));
+    el.prepend(content);
     const p=active.pages[index];
     el.classList.toggle('image-page',Boolean(p?.image && !p.paragraphs));
     el.classList.toggle('end-page',!p || p.kind==='end');
   }
+  function updateShelfHint() {
+    $('#project-scroll-hint').hidden=$('#project-books').scrollWidth<=$('#project-books').clientWidth+1;
+  }
+  window.addEventListener('resize',updateShelfHint);
+  document.fonts?.ready.then(updateShelfHint);
+  requestAnimationFrame(updateShelfHint);
+  function updateNavigation() {
+    if(!active)return;
+    $('#previous-page').disabled=busy||offset===0;
+    $('#next-page').disabled=busy||offset+step()>=active.pages.length;
+    $('#reading-progress').max=active.pages.length;
+    $('#reading-progress').value=Math.min(offset+step(),active.pages.length);
+    $('#reading-hint').textContent=t(mobileQuery.matches?'swipeHint':'readingHint');
+    bookEl.setAttribute('aria-busy',String(busy));
+  }
   function render() {
     setPage($('#left-page'), offset);
     setPage($('#right-page'), mobileQuery.matches ? offset : offset+1);
-    $('#left-page').scrollTop = $('#right-page').scrollTop = 0;
+    document.querySelectorAll('#open-book > .paper .page-content').forEach(el=>{el.scrollTop=0;});
     const last = Math.min(offset+step(),active.pages.length);
     $('#page-status').textContent = mobileQuery.matches ? `${t('page')} ${offset+1} / ${active.pages.length}` : `${t('page')} ${offset+1}–${last} / ${active.pages.length}`;
     $('#left-page').setAttribute('aria-label',t('left'));
     $('#right-page').setAttribute('aria-label', t(mobileQuery.matches?'mobile':'right'));
+    updateNavigation();
   }
   async function openBook(id, trigger) {
-    if (opening || reader.open) return;
+    if (opening || closing || reader.open) return;
     active = window.LIBRARY.find(b=>b.id===id);
     if (!active) return;
     offset=0; busy=false; returnFocus=trigger || document.activeElement;
@@ -157,7 +186,7 @@
     const origin=source.getBoundingClientRect();
     const visibleOrigin=origin.bottom>0 && origin.top<innerHeight && origin.right>0 && origin.left<innerWidth;
     document.body.style.overflow='hidden';
-    if (!motionEnabled || !visibleOrigin) {
+    if (!canAnimate() || !visibleOrigin) {
       reader.showModal();$('#close-reader').focus();return;
     }
     const state={source,animations:[]};opening=state;
@@ -188,46 +217,41 @@
       flightPath.style.transform=position(x,y,startScale);
       volume.style.transform='rotateX(0deg) rotateY(88deg) rotateZ(0deg)';
       await Promise.all([
-        animateOpening(flightPath,[{transform:position(x,y,startScale)},{transform:position(x,y-25,startScale*1.2,75)}],420,state),
-        animateOpening(volume,[{transform:'rotateX(0deg) rotateY(88deg) rotateZ(0deg)'},{transform:'rotateX(-5deg) rotateY(72deg) rotateZ(-5deg)'}],420,state)
+        animateOpening(flightPath,[{transform:position(x,y,startScale)},{transform:position(x,y-25,startScale*1.2,75)}],180,state),
+        animateOpening(volume,[{transform:'rotateX(0deg) rotateY(88deg) rotateZ(0deg)'},{transform:'rotateX(-5deg) rotateY(72deg) rotateZ(-5deg)'}],180,state)
       ]);
       transition.classList.add('flight-dimmed');
       caption.textContent=active.title;
       await Promise.all([
-        animateOpening(flightPath,[{transform:position(x,y-25,startScale*1.2,75)},{transform:position(centerX,centerY,showcaseScale)}],850,state),
-        animateOpening(volume,[{transform:'rotateX(-5deg) rotateY(72deg) rotateZ(-5deg)'},{transform:'rotateX(-6deg) rotateY(-18deg) rotateZ(-3deg)'}],850,state)
+        animateOpening(flightPath,[{transform:position(x,y-25,startScale*1.2,75)},{transform:position(centerX,centerY,showcaseScale)}],420,state),
+        animateOpening(volume,[{transform:'rotateX(-5deg) rotateY(72deg) rotateZ(-5deg)'},{transform:'rotateX(-6deg) rotateY(-18deg) rotateZ(-3deg)'}],420,state)
       ]);
       // A short, visible pause lets the reader see the full cover and page edges.
-      await animateOpening(volume,[{transform:'rotateX(-6deg) rotateY(-18deg) rotateZ(-3deg)'},{transform:'rotateX(-3deg) rotateY(-10deg) rotateZ(0deg)'}],650,state,'ease-in-out');
+      await animateOpening(volume,[{transform:'rotateX(-6deg) rotateY(-18deg) rotateZ(-3deg)'},{transform:'rotateX(-3deg) rotateY(-10deg) rotateZ(0deg)'}],100,state,'ease-in-out');
       caption.textContent=t('chapter');
       await Promise.all([
-        animateOpening(flightPath,[{transform:position(centerX,centerY,showcaseScale)},{transform:position(tx,ty,1)}],500,state),
-        animateOpening(volume,[{transform:'rotateX(-3deg) rotateY(-10deg) rotateZ(0deg)'},{transform:'rotateX(0deg) rotateY(0deg) rotateZ(0deg)'}],500,state)
+        animateOpening(flightPath,[{transform:position(centerX,centerY,showcaseScale)},{transform:position(tx,ty,1)}],220,state),
+        animateOpening(volume,[{transform:'rotateX(-3deg) rotateY(-10deg) rotateZ(0deg)'},{transform:'rotateX(0deg) rotateY(0deg) rotateZ(0deg)'}],220,state)
       ]);
       // Render the unfolding pages in the SAME sharp 3D scene as the cover.
       // The actual reader stays hidden behind the dialog's blurred backdrop.
-      const bounds=bookEl.getBoundingClientRect();
-      const spread=bookEl.cloneNode(true);
+      const spread=snapshotSpread();
       state.spread=spread;
-      spread.removeAttribute('id');
-      spread.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
-      spread.querySelectorAll('.turner,.opening-cover').forEach(el=>el.remove());
-      spread.className='open-book flight-reading-spread';
-      spread.style.cssText=`left:${bounds.left}px;top:${bounds.top}px;width:${bounds.width}px;height:${bounds.height}px;--cover:${active.color}`;
+      spread.style.removeProperty('clip-path');
       transition.querySelector('.flight-world').prepend(spread);
       transition.classList.add('flight-opening');
       const unfolding=[animateOpening(frontCover,[
           {transform:'translateZ(calc(var(--volume-depth) / 2 + 2px)) rotateY(0deg)'},
           {transform:'translateZ(calc(var(--volume-depth) / 2 + 2px)) rotateY(-178deg)'}
-        ],1000,state,'cubic-bezier(.35,.05,.2,1)')];
+        ],560,state,'cubic-bezier(.35,.05,.2,1)')];
       if(!mobileQuery.matches) unfolding.push(animateOpening(spread,[
         {clipPath:'inset(-15px -15px -25px 50%)',offset:0},
         {clipPath:'inset(-15px -15px -25px 50%)',offset:.5},
         {clipPath:'inset(-15px -15px -25px -15px)',offset:1}
-      ],1000,state,'linear'));
+      ],560,state,'linear'));
       await Promise.all(unfolding);
       // Fade just the temporary cover; never fade a scene over a blurred reader.
-      await animateOpening(volume,[{opacity:1},{opacity:0}],180,state,'ease-out');
+      await animateOpening(volume,[{opacity:1},{opacity:0}],90,state,'ease-out');
     } catch(error) {
       if(opening!==state)return;
       // If animation support is interrupted, keep the book readable.
@@ -242,20 +266,86 @@
     reader.classList.remove('reader-waiting','reader-arriving');
     $('#close-reader').focus();
   }
-  function closeBook() { reader.close(); }
+  function snapshotSpread() {
+    const bounds=bookEl.getBoundingClientRect();
+    const spread=bookEl.cloneNode(true);
+    spread.removeAttribute('id');
+    spread.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+    spread.querySelectorAll('.turner,.opening-cover').forEach(el=>el.remove());
+    spread.querySelectorAll('a,button,[tabindex]').forEach(el=>{el.tabIndex=-1;});
+    spread.className='open-book flight-reading-spread';
+    spread.style.cssText=`left:${bounds.left}px;top:${bounds.top}px;width:${bounds.width}px;height:${bounds.height}px;--cover:${active.color};clip-path:none`;
+    [...spread.querySelectorAll('.page-content')].forEach((el,i)=>{
+      el.scrollTop=bookEl.querySelectorAll(':scope > .paper .page-content')[i]?.scrollTop||0;
+    });
+    return spread;
+  }
+  function finishClose(state) {
+    if(closing!==state)return;
+    closing=null;
+    state.animations.forEach(animation=>animation.cancel());
+    state.spread?.remove();
+    frontCover.style.removeProperty('transform');
+    transition.classList.remove('flight-returning','flight-opening','flight-dimmed');
+    transition.close();
+    reader.classList.remove('reader-waiting');
+    reader.close();
+  }
+  async function closeBook() {
+    if(!active||opening||closing)return;
+    clearTimeout(flipTimer);busy=false;
+    bookEl.classList.remove('flipping','backwards');
+    render();
+    const source=document.querySelector(`[data-book="${active.id}"]`);
+    const origin=source.getBoundingClientRect();
+    if(!canAnimate()||origin.bottom<=0||origin.top>=innerHeight){reader.close();return;}
+    const target=$('#right-page').getBoundingClientRect();
+    const width=target.width,height=target.height;
+    const depth=Math.max(25,Math.min(130,origin.width/(origin.height/height)));
+    transition.style.setProperty('--volume-width',`${width}px`);
+    transition.style.setProperty('--volume-height',`${height}px`);
+    transition.style.setProperty('--volume-depth',`${depth}px`);
+    transition.style.setProperty('--volume-color',active.color);
+    const state={source,animations:[]};closing=state;
+    state.spread=snapshotSpread();
+    transition.querySelector('.flight-world').prepend(state.spread);
+    transition.classList.add('flight-opening','flight-returning');
+    caption.textContent='';
+    reader.classList.add('reader-waiting');
+    const atPage=`translate3d(${target.left+width/2}px,${target.top+height/2}px,0) scale(1)`;
+    const atShelf=`translate3d(${origin.left+origin.width/2}px,${origin.top+origin.height/2}px,0) scale(${origin.height/height})`;
+    flightPath.style.transform=atPage;
+    volume.style.transform='rotateY(0deg)';
+    frontCover.style.transform='translateZ(calc(var(--volume-depth) / 2 + 2px)) rotateY(-178deg)';
+    transition.showModal();
+    try {
+      await animateOpening(frontCover,[
+        {transform:'translateZ(calc(var(--volume-depth) / 2 + 2px)) rotateY(-178deg)'},
+        {transform:'translateZ(calc(var(--volume-depth) / 2 + 2px)) rotateY(0deg)'}
+      ],340,state);
+      state.spread.remove();
+      transition.classList.remove('flight-opening');
+      await Promise.all([
+        animateOpening(flightPath,[{transform:atPage},{transform:atShelf}],450,state),
+        animateOpening(volume,[{transform:'rotateY(0deg)'},{transform:'rotateY(88deg)'}],450,state)
+      ]);
+    } catch {} finally {finishClose(state);}
+  }
+  reader.addEventListener('cancel',event=>{event.preventDefault();closeBook();});
   reader.addEventListener('close',()=>{
     clearTimeout(flipTimer);busy=false;active=null;
     bookEl.classList.remove('flipping','backwards');
     document.body.style.overflow='';
     document.querySelector('.book-picked')?.classList.remove('book-picked');
-    returnFocus?.focus();
+    returnFocus?.focus({preventScroll:true});
   });
   function turn(direction) {
-    if (!active || busy || opening) return;
+    if (!active || busy || opening || closing) return;
     const target=offset+direction*step();
     if (target<0 || target>=active.pages.length) return;
-    if (!motionEnabled) { offset=target;render();return; }
+    if (!canAnimate()) { offset=target;render();return; }
     busy=true;
+    updateNavigation();
     const front=$('.turn-front'),back=$('.turn-back');
     if (mobileQuery.matches) {
       setPage(front,offset);setPage(back,target);
@@ -270,11 +360,26 @@
     bookEl.classList.toggle('backwards',direction===-1);
     bookEl.classList.add('flipping');
     const finish=()=>{offset=target;busy=false;bookEl.classList.remove('flipping','backwards');render();};
-    flipTimer=setTimeout(finish,720);
+    flipTimer=setTimeout(finish,flipDuration+30);
   }
   $('#close-reader').addEventListener('click',closeBook);
+  $('#previous-page').addEventListener('click',()=>turn(-1));
+  $('#next-page').addEventListener('click',()=>turn(1));
+  $('#explore-projects').addEventListener('click',event=>{
+    event.preventDefault();
+    $('#featured-projects').scrollIntoView({behavior:canAnimate()?'smooth':'auto',block:'center'});
+    $('#project-books .book').focus({preventScroll:true});
+  });
+  reducedMotionQuery.addEventListener('change',()=>{
+    updateMotion();
+    if(opening)cancelOpening();
+    else if(closing)finishClose(closing);
+    else if(active){clearTimeout(flipTimer);busy=false;bookEl.classList.remove('flipping','backwards');render();}
+  });
+  let suppressPaperClickUntil=0;
   $('#first-book').addEventListener('click',event=>openBook('about',event.currentTarget));
   bookEl.addEventListener('click',event=>{
+    if(Date.now()<suppressPaperClickUntil||window.getSelection()?.toString())return;
     if(event.target.closest('[data-return]')){closeBook();return;}
     if(event.target.closest('[data-zoom]')){openImage(event.target);return;}
     if(event.target.closest('a,button'))return;
@@ -297,16 +402,20 @@
     if(imageViewer.open)return;
     if(event.key==='ArrowRight'){event.preventDefault();turn(1);}
     if(event.key==='ArrowLeft'){event.preventDefault();turn(-1);}
+    if((event.key==='Home'||event.key==='End')&&!busy&&!opening&&!closing){
+      event.preventDefault();offset=event.key==='Home'?0:Math.floor((active.pages.length-1)/step())*step();render();
+    }
     if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-zoom]')){event.preventDefault();openImage(event.target);}
   });
   let startX=0,startY=0;
   bookEl.addEventListener('touchstart',e=>{startX=e.changedTouches[0].clientX;startY=e.changedTouches[0].clientY;},{passive:true});
   bookEl.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
-    if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.5){turn(dx<0?1:-1);}
+    if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.5){suppressPaperClickUntil=Date.now()+500;turn(dx<0?1:-1);}
   },{passive:true});
   mobileQuery.addEventListener('change',()=>{
     if(opening){cancelOpening();return;}
+    if(closing){finishClose(closing);return;}
     if(!active)return;
     clearTimeout(flipTimer);busy=false;bookEl.classList.remove('flipping','backwards');
     if(!mobileQuery.matches)offset=Math.floor(offset/2)*2;

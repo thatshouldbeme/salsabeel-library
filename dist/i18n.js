@@ -3,6 +3,7 @@
   const source = window.LIBRARY;
   const messages = {
     th: {
+      browseProjects:'ปัดดูผลงานทั้ง 4 เล่ม ↔', explore:'สำรวจผลงานเด่น', previous:'หน้าก่อน', next:'หน้าถัดไป', navigation:'การเปลี่ยนหน้าหนังสือ', readingHint:'คลิกหน้าซ้าย–ขวา หรือใช้ปุ่มลูกศร ← →', swipeHint:'แตะขอบหน้า หรือปัดซ้าย–ขวาเพื่อเปลี่ยนหน้า', motionSystem:'ลดการเคลื่อนไหวตามการตั้งค่าของอุปกรณ์',
       headline:'ชั้นหนังสือเล็ก ๆ<br>กับ<em>เรื่องราวมากมาย</em>', intro:'ยินดีต้อนรับสู่ห้องสมุดเล็ก ๆ ของซัลสบีล<br>รวมเรื่องราว งานออกแบบ และสิ่งที่ได้เรียนรู้ไว้บนชั้นนี้',
       librarian:'รู้จักเจ้าของห้องสมุด', name:'ซัลสบีล<br>เดเระมะ', philosophy:'ออกแบบด้วยความใส่ใจ<br>เรียนรู้ด้วยความสงสัย', connect:'มาพูดคุยกัน', collection:'คอลเลกชันหนังสือ', hint:'เลือกสักเล่ม แล้วเปิดเรื่องราวข้างใน', catalogue:'8 เล่ม · 2 ชั้น',
       about:'เกี่ยวกับฉันและทักษะ', projects:'ผลงานเด่น', volumes:'4 เล่ม', other:'ผลงานอื่น ๆ', certificates:'ประกาศนียบัตร', activities:'กิจกรรม', hello:'สวัสดี<br>ฉันชื่อซัลซ่า', little:'ไอเดียเล็ก ๆ', big:'ความเป็นไปได้มากมาย', always:'เรียนรู้', learning:'อยู่เสมอ', handmade:'คัดสรรและสร้างสรรค์ด้วยตัวเอง', first:'เริ่มอ่านเรื่องราวของฉัน', established:'เริ่มต้นในปี 2569',
@@ -11,6 +12,7 @@
       opening:'กำลังหยิบหนังสือออกจากชั้น', cancel:'ยกเลิกการเปิดหนังสือ', picking:'หยิบเรื่องราวออกจากชั้น…', chapter:'เปิดเรื่องราวบทนี้', open:'เปิดหนังสือ', page:'หน้า', left:'หน้าซ้าย — คลิกเพื่อย้อนกลับ', right:'หน้าขวา — คลิกเพื่อไปหน้าถัดไป', mobile:'หน้าหนังสือ — แตะด้านขวาเพื่อไปต่อ ด้านซ้ายเพื่อย้อนกลับ', series:'ห้องสมุดเล็ก ๆ ของซัลสบีล', spineVolume:'เล่ม', volume:'เล่มที่', author:'ซัลสบีล เดเระมะ', language:'เลือกภาษา', title:'ห้องสมุดเล็ก ๆ ของซัลสบีล — Portfolio', description:'ห้องสมุดเล็ก ๆ ของซัลสบีล เดเระมะ รวมงาน UX/UI Design ไอเดีย และประสบการณ์บนชั้นหนังสือที่เปิดอ่านได้'
     },
     en: {
+      browseProjects:'Swipe for all 4 projects ↔', explore:'Explore Projects', previous:'Previous', next:'Next', navigation:'Book navigation', readingHint:'Click either page or use the ← → arrow keys', swipeHint:'Tap either edge or swipe to turn the page', motionSystem:'Reduced motion follows your device settings',
       headline:'A little shelf,<br>a lot of <em>stories.</em>', intro:'Welcome to Salsabeel’s little library.<br>A shelf of design, stories and things I’ve learned.',
       librarian:'MEET THE LIBRARIAN', name:'Salsabeel<br>Deremah', philosophy:'Thoughtful design.<br>Curious mind.', connect:'LET’S CONNECT', collection:'THE COLLECTION', hint:'Pick a book and discover the story inside', catalogue:'8 BOOKS · 2 SHELVES',
       about:'ABOUT ME & SKILLS', projects:'FEATURED PROJECTS', volumes:'4 VOLUMES', other:'OTHER PROJECTS', certificates:'CERTIFICATES', activities:'ACTIVITIES', hello:'hello,<br>I’m Salsa.', little:'little ideas', big:'big possibilities', always:'ALWAYS', learning:'LEARNING', handmade:'HANDPICKED & PERSONALLY MADE', first:'Start with my story', established:'EST. 2026',
@@ -33,7 +35,7 @@
     return group;
   }
   document.querySelector('.collection-tools').append(picker('shelf-language'));
-  document.querySelector('#reader').prepend(picker('reader-language'));
+  document.querySelector('.reader-toolbar').prepend(picker('reader-language'));
   function setLanguage(next){
     if(next!=='th'&&next!=='en')return;
     language=next;
@@ -54,6 +56,13 @@
     }
     document.querySelector('.seal').innerHTML=`${t('always')}<br><span><i data-icon="award"></i></span><br>${t('learning')}`;
     document.querySelector('.below-shelf > span:first-child').innerHTML=`<i></i> ${t('handmade')}`;
+    document.querySelector('#explore-projects').innerHTML=`${t('explore')} <i data-icon="arrow-down-left"></i>`;
+    document.querySelector('#project-scroll-hint').textContent=t('browseProjects');
+    document.querySelector('#previous-page span').textContent=t('previous');
+    document.querySelector('#next-page span').textContent=t('next');
+    document.querySelector('#previous-page').setAttribute('aria-label',t('previous'));
+    document.querySelector('#next-page').setAttribute('aria-label',t('next'));
+    document.querySelector('.reading-navigation').setAttribute('aria-label',t('navigation'));
     document.querySelector('#first-book').innerHTML=`${t('first')} <span><i data-icon="arrow-up-right"></i></span>`;
     document.querySelector('#close-reader').innerHTML=`<span aria-hidden="true"><i data-icon="library-big"></i></span> ${t('back')}`;
     document.querySelector('#close-reader').setAttribute('aria-label',t('back'));
