@@ -22,6 +22,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Version frontend assets
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          index = Path('dist/index.html')
+          revision = os.environ['GITHUB_SHA'][:12]
+          pattern = r'((?:src|href)=")([^":?#]+\.(?:css|js))(?:\?[^\"]*)?(")'
+          index.write_text(re.sub(pattern, lambda match: f'{match[1]}{match[2]}?v={revision}{match[3]}', index.read_text()))
+          PY
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload website

@@ -38,6 +38,8 @@ git push
 
 เว็บเผยแพร่ผ่าน GitHub Pages โดย workflow `Publish Salsabeel Library` จะอัปเดตอัตโนมัติเมื่อ push การเปลี่ยนแปลงใน `dist/` หรือไฟล์ workflow ขึ้นสาขา `main` และยังสั่ง `Run workflow` ได้ตามเดิม
 
+เมื่อเผยแพร่ workflow จะเติมเวอร์ชัน commit ให้ URL ของไฟล์ CSS และ JavaScript ในหน้าเว็บที่เผยแพร่ เพื่อให้โหลดไฟล์ตรงกับเวอร์ชันใหม่แทนไฟล์เก่าที่อาจอยู่ใน cache โดยไม่แก้ไฟล์ต้นฉบับในเครื่อง
+
 ใน GitHub Desktop หลังแก้ไขเว็บ ให้กรอกข้อความสรุป → `Commit to main` → `Push origin` แล้วรอการเผยแพร่สำเร็จในแท็บ Actions โดยไม่ต้องสั่งเผยแพร่เองทุกครั้ง ส่วน `Fetch origin` ใช้ตรวจข้อมูลจาก GitHub และ `Pull origin` ใช้ดึงงานจาก GitHub ลงเครื่อง จึงไม่ส่งงานที่แก้ในเครื่องขึ้นเว็บ
 
 หากตั้งค่าโฮสต์ใหม่ ให้ไปที่ Settings → Pages แล้วเลือก GitHub Actions เป็นแหล่งเผยแพร่
