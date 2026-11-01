@@ -14,7 +14,7 @@ python3 -m http.server 4173 --directory dist
 
 ## Repository และสถานะเว็บ
 
-โค้ดถูกอัปโหลดแล้วที่ https://github.com/thatshouldbeme/salsabeel-library เป็น **Private** แยกจากพอร์ตเดิม
+โค้ดอยู่ที่ https://github.com/thatshouldbeme/salsabeel-library เป็น **Public** แยกจากพอร์ตเดิม
 
 โฟลเดอร์ในเครื่องเชื่อมกับสาขา `main` ของ repository นี้แล้ว หลังแก้ไขไฟล์ให้อัปเดตด้วย:
 
@@ -27,9 +27,11 @@ git push
 
 ## GitHub Pages
 
-ตรวจเมื่อ 31 ตุลาคม 2026: หน้าตั้งค่า GitHub แจ้งว่าต้องอัปเกรดแพ็กเกจหรือเปลี่ยน repository เป็น Public จึงจะเปิด Pages ได้ ขณะนี้คง repository เป็น Private ตามที่เจ้าของเลือก จึงยังไม่มีเว็บที่เผยแพร่จาก GitHub Pages
+เว็บเผยแพร่ผ่าน GitHub Pages โดย workflow `Publish Salsabeel Library` จะอัปเดตอัตโนมัติเมื่อ push การเปลี่ยนแปลงใน `dist/` หรือไฟล์ workflow ขึ้นสาขา `main` และยังสั่ง `Run workflow` ได้ตามเดิม
 
-เก็บ workflow ไว้สำหรับสั่งเผยแพร่เอง (`workflow_dispatch`) โดยไม่รันอัตโนมัติทุกครั้งที่ push เพื่อไม่ให้เกิดงานเผยแพร่ที่ล้มเหลวซ้ำ เมื่อบัญชีรองรับแล้ว ไปที่ Settings → Pages เลือก GitHub Actions และสั่ง Actions → Publish Salsabeel Library → Run workflow
+ใน GitHub Desktop หลังแก้ไขเว็บ ให้กรอกข้อความสรุป → `Commit to main` → `Push origin` แล้วรอการเผยแพร่สำเร็จในแท็บ Actions โดยไม่ต้องสั่งเผยแพร่เองทุกครั้ง ส่วน `Fetch origin` ใช้ตรวจข้อมูลจาก GitHub และ `Pull origin` ใช้ดึงงานจาก GitHub ลงเครื่อง จึงไม่ส่งงานที่แก้ในเครื่องขึ้นเว็บ
+
+หากตั้งค่าโฮสต์ใหม่ ให้ไปที่ Settings → Pages แล้วเลือก GitHub Actions เป็นแหล่งเผยแพร่
 
 เว็บต้นแบบเดิมยังอยู่ที่ https://little-library-portfolio-1031.satiny-knoll-9335.chatgpt.site/ การ push ไป GitHub จะไม่เปลี่ยนเว็บ Sites เดิมโดยอัตโนมัติ
 
