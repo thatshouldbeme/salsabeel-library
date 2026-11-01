@@ -172,3 +172,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #964a35;outline-offset:4p
 .shelf-scroll-hint[hidden]{display:none}
 
 .page-content:focus-visible{outline:2px solid #8f9b7b;outline-offset:-2px;border-radius:2px}
+/* Preserve the portrait's proportions instead of shrinking it into a banner. */
+.page-image.portrait{width:auto;max-width:65%;height:clamp(140px,26dvh,240px);aspect-ratio:160/190;flex:0 0 auto}
+@media(max-width:760px){.page-image.portrait{width:auto;height:clamp(125px,25dvh,210px)}}
