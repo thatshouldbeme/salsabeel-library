@@ -9,9 +9,12 @@
   const reader = $('#reader'), imageViewer = $('#image-viewer'), bookEl = $('#open-book');
   const mobileQuery = matchMedia('(max-width:760px)');
   const reducedMotionQuery=matchMedia('(prefers-reduced-motion: reduce)');
-  const canAnimate=()=>motionEnabled && !reducedMotionQuery.matches && typeof bookEl.animate==='function';
-  let motionEnabled=true;
-  try { motionEnabled=localStorage.getItem('library-motion')!=='reduced'; } catch {}
+  let motionPreference='auto';
+  try {
+    const saved=localStorage.getItem('library-motion');
+    if(saved==='full'||saved==='reduced')motionPreference=saved;
+  } catch {}
+  const canAnimate=()=>typeof bookEl.animate==='function' && (motionPreference==='full'||motionPreference==='auto'&&!reducedMotionQuery.matches);
   const motionButton=document.createElement('button');
   motionButton.className='motion-toggle';
   motionButton.setAttribute('aria-label',t('motion'));
@@ -19,16 +22,17 @@
   function updateMotion() {
     const enabled=canAnimate();
     motionButton.innerHTML=icon(enabled?'box':'pause');
-    motionButton.title=t(reducedMotionQuery.matches?'motionSystem':enabled?'motionOn':'motionOff');
-    motionButton.disabled=reducedMotionQuery.matches;
+    motionButton.title=t(motionPreference==='auto'&&reducedMotionQuery.matches?'motionSystem':enabled?'motionOn':'motionOff');
+    motionButton.disabled=typeof bookEl.animate!=='function';
     motionButton.setAttribute('aria-label',t('motion'));
     motionButton.setAttribute('aria-pressed',String(enabled));
     document.body.classList.toggle('motion-reduced',!enabled);
+    document.body.classList.toggle('motion-full',motionPreference==='full'&&enabled);
   }
   motionButton.addEventListener('click',()=>{
-    motionEnabled=!motionEnabled;
+    motionPreference=canAnimate()?'reduced':'full';
     updateMotion();
-    try {localStorage.setItem('library-motion',motionEnabled?'full':'reduced');}catch{}
+    try {localStorage.setItem('library-motion',motionPreference);}catch{}
   });
   updateMotion();
   let active = null, offset = 0, busy = false, returnFocus = null, flipTimer;

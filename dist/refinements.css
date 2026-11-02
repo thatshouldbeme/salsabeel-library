@@ -162,8 +162,8 @@
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .fairy-dust{display:none}
-  .book,.library-card,#book-transition::backdrop{transition:none}
+  body:not(.motion-full) .fairy-dust{display:none}
+  body:not(.motion-full) .book,body:not(.motion-full) .library-card,body:not(.motion-full) #book-transition::backdrop{transition:none}
 }
 .motion-reduced .book:hover,.motion-reduced .book:focus-visible{transform:rotate(var(--lean,0deg))}
 button:focus-visible,a:focus-visible{outline:3px solid #964a35;outline-offset:4px}
